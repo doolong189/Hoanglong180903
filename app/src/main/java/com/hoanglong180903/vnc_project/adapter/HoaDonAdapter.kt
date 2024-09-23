@@ -8,6 +8,9 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexWrap
+import com.google.android.flexbox.FlexboxLayoutManager
 import com.hoanglong180903.vnc_project.R
 import com.hoanglong180903.vnc_project.listener.OnClickItemBan
 import com.hoanglong180903.vnc_project.listener.OnClickItemHoaDon
@@ -30,10 +33,19 @@ class HoaDonAdapter(private var context: Context, private val hoaDons_list: List
         holder.tvStatus.text = if (item.status) "Đã thanh toán" else "Chưa thanh toán"
         holder.tvStatus.visibility = if (item.status) View.VISIBLE else View.GONE
         if (item.status) holder.itemView.isEnabled = false else holder.itemView.isEnabled = true
+        val flexboxLayoutManager = FlexboxLayoutManager(holder.itemView.context)
+        flexboxLayoutManager.apply {
+            flexDirection = FlexDirection.ROW
+            flexWrap = FlexWrap.WRAP
+        }
         val childAdapter: ImageAdapter = ImageAdapter(item.sanPhams)
-        holder.rcImage.setLayoutManager(LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false))
-        holder.rcImage.setAdapter(childAdapter)
-        holder.rcImage.setHasFixedSize(true)
+//        holder.rcImage.setLayoutManager(LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false))
+//        holder.rcImage.setAdapter(childAdapter)
+//        holder.rcImage.setHasFixedSize(true)
+        holder.rcImage.apply {
+            layoutManager = flexboxLayoutManager
+            adapter = childAdapter
+        }
         childAdapter.notifyDataSetChanged()
 
 

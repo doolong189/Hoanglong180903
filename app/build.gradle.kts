@@ -47,8 +47,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-
-    implementation(platform("com.google.firebase:firebase-bom:33.3.0"))
-
-    implementation("com.google.firebase:firebase-analytics")
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation("com.google.android.flexbox:flexbox:3.0.0")
 }

@@ -61,7 +61,11 @@ class ListActivity : AppCompatActivity() {
             SanPham(0, "Bia", 7000, 0),
             SanPham(1, "CoCa", 10000, 0),
             SanPham(2, "Fanta", 5000, 0),
-            SanPham(3, "Pepsi", 10000, 0)
+            SanPham(3, "Pepsi", 10000, 0),
+            SanPham(4, "Mixue", 10000, 0),
+            SanPham(5, "Chivas", 10000, 0),
+            SanPham(6, "ABC", 10000, 0),
+            SanPham(7, "XYZ", 10000, 0),
         )
         return listSanPham
     }
