@@ -94,7 +94,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="Nhập số tiền"/>
+            android:hint="Nhập số tiền"
+            android:inputType="number"
+            android:maxLength="12"
+            />
         <TextView
             android:id="@+id/tvTongTien"
             android:layout_width="wrap_content"

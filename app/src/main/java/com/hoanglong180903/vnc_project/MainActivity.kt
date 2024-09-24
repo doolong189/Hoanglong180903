@@ -5,6 +5,9 @@ import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.Editable
+import android.text.InputFilter
+import android.text.TextWatcher
 import android.util.Log
 import android.view.View
 import android.widget.Button
@@ -20,8 +23,12 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.hoanglong180903.vnc_project.adapter.ChanLeAdapter
+import java.math.RoundingMode
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 import java.util.Random
 
 class MainActivity : AppCompatActivity() {
@@ -59,7 +66,7 @@ class MainActivity : AppCompatActivity() {
         //new
 
 
-        val sdf = SimpleDateFormat("hh:mm dd/M/yyyy")
+        val sdf = SimpleDateFormat("HH:mm dd/M/yyyy")
         val currentDate = sdf.format(Date())
         Log.e("date", currentDate)
         val btnPlay = findViewById<Button>(R.id.btnPlay)
@@ -67,12 +74,72 @@ class MainActivity : AppCompatActivity() {
         val btnLe = findViewById<Button>(R.id.btnLe)
         val imageViewKqua = findViewById<ImageView>(R.id.imageViewKqua)
         val tvTongTien = findViewById<TextView>(R.id.tvTongTien)
-//        btnChan.setOnClickListener {
-//            isOddClicked = true
-//        }
-//        btnLe.setOnClickListener {
-//            isEvenClicked = true
-//        }
+        val edNhapTien = findViewById<EditText>(R.id.edNhapTien)
+        val symbols = DecimalFormatSymbols(Locale.US) // Sử dụng Locale.US để có dấu phẩy
+        val df = DecimalFormat("#,###", symbols)
+        df.roundingMode = RoundingMode.CEILING
+        val formattedNumber = df.format(tongTien)
+        tvTongTien.text = currentDate + "\n" + "$formattedNumber"
+        edNhapTien.addTextChangedListener(object : TextWatcher {
+            private var current = ""
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+
+//                if (s.toString() != current) {
+//                    val userInput = s.toString().replace(nonDigits,"")
+//                    if (userInput.length <= 12) {
+//                        current = userInput.chunked(3).joinToString(",")
+//                        s!!.filters = arrayOfNulls<InputFilter>(0)
+//                    }
+//                    s!!.replace(0,  s.length, current, 0, current.length)
+//                }
+                if (s.toString() != current) {
+                    val userInput = s.toString().replace(nonDigits, "").replace(",", "")
+
+                    // Validate length ignoring commas
+                    val lengthWithoutCommas = userInput.length
+
+                    if (lengthWithoutCommas <= 12) {
+                        // Format the number
+                        current = formatNumber(userInput)
+                        s!!.filters = arrayOfNulls<InputFilter>(0)
+                    }
+
+                    s!!.replace(0, s.length, current, 0, current.length)
+                }
+            }
+        })
+        btnPlay.setOnClickListener {
+            val input = edNhapTien.text.toString()
+            // Check if the input is empty
+            if (input.isEmpty()) {
+                edNhapTien.error = "Không được để trống!"
+                return@setOnClickListener
+            }
+//            val inputReplace = edNhapTien.text.toString().replace(",", "").length
+//            // Check if the input exceeds 12 digits
+//            if (inputReplace > 12) {
+//                edNhapTien.error = "Không được nhập quá 12 số!"
+//                return@setOnClickListener
+//            }
+
+            // Convert input to integer and check if it exceeds tongTien
+            val enteredAmount = edNhapTien.text.toString().replace(",", "").toIntOrNull()
+            if (enteredAmount == null || enteredAmount > tongTien) {
+                edNhapTien.error = "Số tiền không được lớn hơn $tongTien!"
+                return@setOnClickListener
+            }
+
+            // Proceed with the rest of your code
+            Toast.makeText(this, "Hợp lệ! Tiếp tục chơi!", Toast.LENGTH_SHORT).show()
+            tvTongTien.text = edNhapTien.text.toString()
+        }
+
+
         btnChan.setOnClickListener {
             if (!isButton1Active || !isOddClicked) {
                 btnChan.setBackgroundColor(Color.RED)
@@ -93,168 +160,33 @@ class MainActivity : AppCompatActivity() {
                 isEvenClicked = true
             }
         }
-        btnPlay.setOnClickListener {
-            if (!isEvenClicked && !isOddClicked) {
-                Toast.makeText(this, "Cả 2 nút chưa được click", Toast.LENGTH_SHORT).show()
-            } else {
-                listResult.add(kotlin.random.Random.nextBoolean())
-                listResult.add(kotlin.random.Random.nextBoolean())
-                listResult.add(kotlin.random.Random.nextBoolean())
-                listResult.add(kotlin.random.Random.nextBoolean())
-                for (result in listResult) {
-                    if (result) {
-                        listChan.add(result)
-                        Log.e("zzz1", "" + listChan)
-                    } else {
-                        listLe.add(result)
-                        Log.e("zzz2", "" + listLe)
-                    }
-                }
-                Log.e("zzz", "" + listResult)
-                btnPlay.text = "..."
-                btnPlay.setBackgroundResource(R.color.orange)
-                btnPlay.isEnabled = false
-                val handler = Handler(Looper.getMainLooper())
-                var index = 0
-                val runnable = object : Runnable {
-                    override fun run() {
-                        if (index < list.size) {
-                            imageViewKqua.setImageResource(list[index])
-                            index++
-                            handler.postDelayed(this, 1000)
-                        } else {
-                            val recyclerView = findViewById<RecyclerView>(R.id.rcChan)
-                            recyclerView.layoutManager =
-                                LinearLayoutManager(
-                                    applicationContext,
-                                    LinearLayoutManager.VERTICAL,
-                                    false
-                                )
-                            chanAdapter = ChanLeAdapter(listChan, true)
-                            recyclerView.adapter = chanAdapter
+    }
 
-                            val recyclerView1 = findViewById<RecyclerView>(R.id.rcLe)
-                            recyclerView1.layoutManager =
-                                LinearLayoutManager(
-                                    applicationContext,
-                                    LinearLayoutManager.VERTICAL,
-                                    false
-                                )
-                            leAdapter = ChanLeAdapter(listLe, false)
-                            recyclerView1.adapter = leAdapter
-                            if (listChan.size == listLe.size || listChan.isEmpty() || listLe.isEmpty()) {
-                                Toast.makeText(applicationContext, "Chẵn", Toast.LENGTH_LONG).show()
-                            } else {
-                                Toast.makeText(applicationContext, "Lẻ", Toast.LENGTH_LONG).show()
-                            }
-//                            tvRandom.text = randomNumber.toString()
-//                            if (randomNumber % 2 == 0 && statusClick == "Chẵn") {
-//                                Toast.makeText(applicationContext, "Bạn chọn chẵn - kết quả chẵn", Toast.LENGTH_LONG).show()
-//                                tongTien += edNhapTien.text.toString().toInt()
-//                            } else if (randomNumber % 2 == 0 && statusClick == "Lẻ") {
-//                                tongTien -= edNhapTien.text.toString().toInt()
-//                                Toast.makeText(applicationContext, "Bạn chọn chẵn - kết quả lẻ", Toast.LENGTH_LONG).show()
-//                            } else if (randomNumber % 1 == 0 && statusClick ==  "Lẻ") {
-//                                tongTien += edNhapTien.text.toString().toInt()
-//                                Toast.makeText(applicationContext, "Bạn chọn lẻ - kết quả lẻ", Toast.LENGTH_LONG).show()
-//                            } else if (randomNumber % 1 == 0 && statusClick == "Chẵn") {
-//                                tongTien -= edNhapTien.text.toString().toInt()
-//                                Toast.makeText(applicationContext, "Bạn chọn lẻ - kết quả chẵn", Toast.LENGTH_LONG).show()
-//                            }
-//                            tvTongTien.text = "Tổng số tiền: " + tongTien
-                            btnPlay.text = "Play"
-                            btnPlay.setBackgroundResource(R.color.green)
-                            btnPlay.isEnabled = true
-                            isOddClicked = false
-                            isEvenClicked = false
-                            btnChan.setBackgroundColor(Color.LTGRAY)
-                            btnLe.setBackgroundColor(Color.LTGRAY)
-                            tvTongTien.setOnClickListener {
-                                listChan.clear()
-                                listLe.clear()
-                                listResult.clear()
-                                recyclerView.layoutManager =
-                                    LinearLayoutManager(
-                                        applicationContext,
-                                        LinearLayoutManager.VERTICAL,
-                                        false
-                                    )
-                                chanAdapter = ChanLeAdapter(listChan, true)
-                                recyclerView.adapter = chanAdapter
+    companion object {
+        private val nonDigits = Regex("[^\\d]")
+    }
 
-                                recyclerView1.layoutManager =
-                                    LinearLayoutManager(
-                                        applicationContext,
-                                        LinearLayoutManager.VERTICAL,
-                                        false
-                                    )
-                                leAdapter = ChanLeAdapter(listLe, false)
-                                recyclerView1.adapter = leAdapter
-                            }
-                        }
-                    }
+
+    private fun formatNumber(input: String): String {
+        val cleanedInput = input.replace(",", "") // Remove existing commas
+
+        return when {
+            cleanedInput.length <= 3 -> cleanedInput // No formatting needed
+            else -> {
+                // Split the cleaned input into parts
+                val lastThreeDigits = cleanedInput.takeLast(3)
+                val remainingDigits = cleanedInput.dropLast(3)
+
+                // Add commas to the remaining part (from the end)
+                val formattedRemaining = remainingDigits.reversed().chunked(3).joinToString(",").reversed()
+
+                // Combine the formatted parts
+                if (formattedRemaining.isNotEmpty()) {
+                    "$formattedRemaining,$lastThreeDigits"
+                } else {
+                    lastThreeDigits
                 }
-                handler.post(runnable)
             }
         }
     }
-
-//        val btnPlay = findViewById<Button>(R.id.btnPlay)
-//        val btnChan = findViewById<Button>(R.id.btnChan)
-//        val btnLe = findViewById<Button>(R.id.btnLe)
-//        val tvRandom = findViewById<TextView>(R.id.tvRandomNumber)
-//        val tvTongTien = findViewById<TextView>(R.id.tvTongTien)
-//        val edNhapTien = findViewById<EditText>(R.id.edNhapTien)
-//        val imageChanLe = findViewById<ImageView>(R.id.imageChanLe)
-//        tvTongTien.text = "Tổng số tiền: " + tongTien
-//        btnPlay.setOnClickListener {
-//            if (edNhapTien.text.toString() != "" && edNhapTien.text.toString().toInt() > tongTien) {
-//                Toast.makeText(this, "Không nhập quá số tiền", Toast.LENGTH_SHORT).show()
-//                return@setOnClickListener
-//            } else if (edNhapTien.text.toString() == "") {
-//                Toast.makeText(this, "Yêu cầu nhập số tiền", Toast.LENGTH_SHORT).show()
-//                return@setOnClickListener
-//
-//            } else if (statusClick == "") {
-//                Toast.makeText(this, "Yêu cầu chọn chẵn hoặc lẻ", Toast.LENGTH_SHORT).show()
-//                return@setOnClickListener
-//            } else {
-//                btnPlay.text = "..."
-//                btnPlay.setBackgroundResource(R.color.orange)
-//                btnPlay.isEnabled = false
-//                val handler = Handler(Looper.getMainLooper())
-//                var index = 0
-//                val runnable = object : Runnable {
-//                    override fun run() {
-//                        if (index < list.size) {
-//                            imageChanLe.setImageResource(list[index])
-//                            index++
-//                            handler.postDelayed(this, 1000)
-//                        }else{
-//                            val randomNumber = (0 until 100).random()
-//                            tvRandom.text = randomNumber.toString()
-//                            if (randomNumber % 2 == 0 && statusClick == "Chẵn") {
-//                                Toast.makeText(applicationContext, "Bạn chọn chẵn - kết quả chẵn", Toast.LENGTH_LONG).show()
-//                                tongTien += edNhapTien.text.toString().toInt()
-//                            } else if (randomNumber % 2 == 0 && statusClick == "Lẻ") {
-//                                tongTien -= edNhapTien.text.toString().toInt()
-//                                Toast.makeText(applicationContext, "Bạn chọn chẵn - kết quả lẻ", Toast.LENGTH_LONG).show()
-//                            } else if (randomNumber % 1 == 0 && statusClick ==  "Lẻ") {
-//                                tongTien += edNhapTien.text.toString().toInt()
-//                                Toast.makeText(applicationContext, "Bạn chọn lẻ - kết quả lẻ", Toast.LENGTH_LONG).show()
-//                            } else if (randomNumber % 1 == 0 && statusClick == "Chẵn") {
-//                                tongTien -= edNhapTien.text.toString().toInt()
-//                                Toast.makeText(applicationContext, "Bạn chọn lẻ - kết quả chẵn", Toast.LENGTH_LONG).show()
-//                            }
-//                            tvTongTien.text = "Tổng số tiền: " + tongTien
-//                            btnPlay.text = "Play"
-//                            btnPlay.setBackgroundResource(R.color.green)
-//                            btnPlay.isEnabled = true
-//                            imageChanLe.visibility = View.GONE
-//                        }
-//                    }
-//                }
-//                handler.post(runnable)
-//            }
-//        }
 }
