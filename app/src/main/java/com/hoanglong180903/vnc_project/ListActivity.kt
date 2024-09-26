@@ -12,11 +12,19 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 import com.hoanglong180903.vnc_project.model.Ban
 import com.hoanglong180903.vnc_project.model.HoaDon
+import com.hoanglong180903.vnc_project.model.LichSuDatBan
 import com.hoanglong180903.vnc_project.model.SanPham
+import com.hoanglong180903.vnc_project.viewmodel.RetrofitViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class ListActivity : AppCompatActivity() {
@@ -27,12 +35,18 @@ class ListActivity : AppCompatActivity() {
 //    private val listBan  = ArrayList<Ban>()
     private val listSanPham  = ArrayList<SanPham>()
     private val listHoaDon = ArrayList<HoaDon>()
+    private val listLichSuDatBan = ArrayList<LichSuDatBan>()
+    private lateinit var retrofitViewModel: RetrofitViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_list_item)
         replaceFragment(ListFragment())
         askNotificationPermission()
+    }
+
+    private fun init(){
+        retrofitViewModel = ViewModelProvider(this, RetrofitViewModel.RetrofitViewModelFactory(application))[RetrofitViewModel::class.java]
     }
 
     private fun replaceFragment(fragment: Fragment) {
@@ -58,14 +72,14 @@ class ListActivity : AppCompatActivity() {
 
     fun getListSanPham(): List<SanPham> {
         val listSanPham: List<SanPham> = listOf(
-            SanPham(0, "Bia", 7000, 0),
-            SanPham(1, "CoCa", 10000, 0),
-            SanPham(2, "Fanta", 5000, 0),
-            SanPham(3, "Pepsi", 10000, 0),
-            SanPham(4, "Mixue", 10000, 0),
-            SanPham(5, "Chivas", 10000, 0),
-            SanPham(6, "ABC", 10000, 0),
-            SanPham(7, "XYZ", 10000, 0),
+            SanPham(0, "Bia", "",7000, 0),
+            SanPham(1, "CoCa","", 10000, 0),
+            SanPham(2, "Fanta","", 5000, 0),
+            SanPham(3, "Pepsi","", 10000, 0),
+            SanPham(4, "Mixue","", 10000, 0),
+            SanPham(5, "Chivas", "",10000, 0),
+            SanPham(6, "ABC", "",10000, 0),
+            SanPham(7, "XYZ", "",10000, 0),
         )
         return listSanPham
     }
@@ -93,6 +107,14 @@ class ListActivity : AppCompatActivity() {
 
     fun setUpdateHoaDon(item: HoaDon, position : Int) {
         listHoaDon.set(position,item)
+    }
+
+    fun getListLichSuDatBan(): MutableList<LichSuDatBan> {
+        return listLichSuDatBan
+    }
+
+    fun setLichSuDatBan(item: LichSuDatBan) {
+        listLichSuDatBan.add(item)
     }
 
      fun requestPermission(){

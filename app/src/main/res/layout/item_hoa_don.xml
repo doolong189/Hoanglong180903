@@ -17,7 +17,6 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:orientation="vertical">
-
             <TextView
                 android:id="@+id/item_hoa_don_tvTen"
                 android:layout_width="wrap_content"
@@ -67,6 +66,12 @@
                         android:text="Tổng tiền"
                         android:textStyle="bold"
                         android:textColor="#FF5722"/>
+                    <TextView
+                        android:id="@+id/item_hoa_don_tvNgayTao"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ngày tạo"
+                        android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>

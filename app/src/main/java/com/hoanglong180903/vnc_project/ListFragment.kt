@@ -26,6 +26,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentTransaction
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -41,7 +43,11 @@ import com.hoanglong180903.vnc_project.listener.OnClickItemHoaDon
 import com.hoanglong180903.vnc_project.listener.OnClickItemSanPham
 import com.hoanglong180903.vnc_project.model.Ban
 import com.hoanglong180903.vnc_project.model.HoaDon
+import com.hoanglong180903.vnc_project.model.LichSuDatBan
 import com.hoanglong180903.vnc_project.model.SanPham
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 class ListFragment : Fragment(), OnClickItemBan, OnClickItemSanPham, OnClickItemHoaDon {
@@ -50,9 +56,11 @@ class ListFragment : Fragment(), OnClickItemBan, OnClickItemSanPham, OnClickItem
     private lateinit var sanPhamAdapter: SanPhamAdapter
     private lateinit var rcHoaDon: RecyclerView
     private lateinit var flBtn: FloatingActionButton
+    private lateinit var flLichSuDatBan: FloatingActionButton
     private var banTemp = Ban()
     private lateinit var hoaDonTemp: HoaDon
     private var listSanPhamTemp = ArrayList<SanPham>()
+    private var listHoaDonTemp = ArrayList<HoaDon>()
     private var tongTien = 0
     private var tamThoiList: List<SanPham>? = null
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,6 +84,7 @@ class ListFragment : Fragment(), OnClickItemBan, OnClickItemSanPham, OnClickItem
     private fun initView(view: View) {
         rcHoaDon = view.findViewById(R.id.rcHoaDon)
         flBtn = view.findViewById(R.id.floatBtn)
+        flLichSuDatBan = view.findViewById(R.id.floatBtnLichSu)
     }
 
     private fun initVariable() {
@@ -85,10 +94,16 @@ class ListFragment : Fragment(), OnClickItemBan, OnClickItemSanPham, OnClickItem
         rcHoaDon.adapter = hoaDonAdapter
         Log.e("list_hoa_don", "" + (activity as ListActivity).getListHoaDon())
         flBtn.setOnClickListener { dialog() }
+        flLichSuDatBan.setOnClickListener {  replaceFragment(LichSuDatBanFragment())}
         val itemTouchHelper = ItemTouchHelper(simpleItemTouchCallback)
         itemTouchHelper.attachToRecyclerView(rcHoaDon)
     }
-
+    private fun replaceFragment(fragment: Fragment) {
+        val manager: FragmentManager = requireActivity().supportFragmentManager
+        val transaction: FragmentTransaction = manager.beginTransaction()
+        transaction.replace(R.id.main_frame, fragment)
+        transaction.commit()
+    }
     @SuppressLint("NotifyDataSetChanged")
     private fun dialog() {
         val builder = AlertDialog.Builder(context)
@@ -127,15 +142,17 @@ class ListFragment : Fragment(), OnClickItemBan, OnClickItemSanPham, OnClickItem
         btnCancel.setOnClickListener {
             dialog.dismiss()
         }
-        for (x in listSanPhamTemp) {
-            tongTien += (x.giaTien * x.soLuong)
-        }
         btnSave.setOnClickListener {
             if (banTemp.ten == ""){
                 Toast.makeText(requireContext(),"Xin mời chọn số bàn",Toast.LENGTH_LONG).show()
             }else if (listSanPhamTemp.isEmpty()){
                 Toast.makeText(requireContext(),"Xin mời chọn món ăn",Toast.LENGTH_LONG).show()
             }else{
+                for (x in listSanPhamTemp) {
+                    tongTien += (x.giaTien * x.soLuong)
+                }
+                val sdf = SimpleDateFormat("dd/M/yyyy")
+                val currentDate = sdf.format(Date())
                 val listAddSanPham = ArrayList<SanPham>()
                 listAddSanPham.addAll(listSanPhamTemp)
                 hoaDonTemp = HoaDon(
@@ -143,12 +160,14 @@ class ListFragment : Fragment(), OnClickItemBan, OnClickItemSanPham, OnClickItem
                     banTemp,
                     listAddSanPham,
                     tongTien,
+                    currentDate,
                     false
                 )
                 (activity as ListActivity).setHoaDon(hoaDonTemp)
                 initVariable()
                 hoaDonAdapter.notifyDataSetChanged()
                 listSanPhamTemp.clear()
+                banTemp = Ban()
                 dialog.dismiss()
             }
         }
@@ -168,7 +187,7 @@ class ListFragment : Fragment(), OnClickItemBan, OnClickItemSanPham, OnClickItem
                 listSanPhamTemp.remove(existingItem)
             }
         } else {
-            listSanPhamTemp.add(SanPham(item.id, item.ten, item.giaTien, item.soLuong))
+            listSanPhamTemp.add(SanPham(item.id, item.ten,"", item.giaTien, item.soLuong))
         }
         Log.e("list_sp_temp", listSanPhamTemp.toString())
     }
@@ -215,13 +234,28 @@ class ListFragment : Fragment(), OnClickItemBan, OnClickItemSanPham, OnClickItem
 
 
         btnThanhToan.setOnClickListener {
-            (activity as ListActivity).getListHoaDon()[position] =
-                HoaDon(item.id, item.ban, item.sanPhams, item.tongTien, true)
-            initVariable()
+            val sdf = SimpleDateFormat("M/yyyy")
+            val currentDate = sdf.format(Date())
+            listHoaDonTemp.add(HoaDon(item.id,item.ban,item.sanPhams
+                    ,item.tongTien,item.ngayTao,true))
+            val listAddHoaDon = ArrayList<HoaDon>()
+            listAddHoaDon.addAll(listHoaDonTemp)
+            //add lish su
+            val lichSuDatBanTemp = LichSuDatBan(
+                (activity as ListActivity).getListLichSuDatBan().size,
+                currentDate,item.tongTien,listAddHoaDon)
+            checkLichSuTrung((activity as ListActivity).getListLichSuDatBan() , LichSuDatBan(
+                (activity as ListActivity).getListLichSuDatBan().size,
+                currentDate,item.tongTien,listAddHoaDon))
+            (activity as ListActivity).getListHoaDon().removeAt(position)
             hoaDonAdapter.notifyDataSetChanged()
+            listHoaDonTemp.clear()
+            listSanPhamTemp.clear()
             dialog.dismiss()
         }
         btnHuyBo.setOnClickListener {
+            listSanPhamTemp.clear()
+            banTemp = Ban()
             dialog.dismiss()
         }
         btnCapNhat.setOnClickListener {
@@ -232,12 +266,14 @@ class ListFragment : Fragment(), OnClickItemBan, OnClickItemSanPham, OnClickItem
                 banTemp,
                 listAddSanPham,
                 tongTien,
+                item.ngayTao,
                 false
             )
             (activity as ListActivity).setUpdateHoaDon(hoaDonTemp,position)
             initVariable()
             hoaDonAdapter.notifyDataSetChanged()
             listSanPhamTemp.clear()
+            banTemp = Ban()
             dialog.dismiss()
         }
     }
@@ -349,6 +385,28 @@ class ListFragment : Fragment(), OnClickItemBan, OnClickItemSanPham, OnClickItem
             }
         }
         return tamThoiList
+    }
+
+
+    fun checkLichSuTrung(
+        list: MutableList<LichSuDatBan>,
+        newLichSu: LichSuDatBan
+    ) {
+        val existingItem = list.find { it.ngayDat == newLichSu.ngayDat }
+        if (existingItem != null) {
+            val mergedHoaDons = existingItem.hoadons + newLichSu.hoadons
+            Log.e("log_mergedHoaDons",""+mergedHoaDons)
+            val updatedTongTien = existingItem.tongTien + newLichSu.tongTien
+
+            val updatedItem = existingItem.copy(
+                hoadons = mergedHoaDons,
+                tongTien = updatedTongTien
+            )
+            Log.e("log_updatedItem",""+updatedItem)
+            list[list.indexOf(existingItem)] = updatedItem
+        } else {
+            list.add(newLichSu)
+        }
     }
 
 }

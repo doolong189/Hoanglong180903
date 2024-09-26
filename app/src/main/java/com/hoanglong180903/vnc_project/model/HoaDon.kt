@@ -5,5 +5,6 @@ data class HoaDon (
     val ban : Ban ,
     val sanPhams : List<SanPham>,
     val tongTien : Int = 0,
+    val ngayTao : String = "",
     val status : Boolean // false : chua thanh toan , true : thanh toan
 )

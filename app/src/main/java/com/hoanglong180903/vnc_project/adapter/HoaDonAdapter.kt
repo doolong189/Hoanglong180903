@@ -59,6 +59,7 @@ class HoaDonAdapter(private var context: Context, private val hoaDons_list: List
         holder.itemView.setOnClickListener {
             listener.onClickItem(item,holder.adapterPosition)
         }
+        holder.tvNgayTao.text = "Thời gian: "+item.ngayTao
     }
 
     override fun getItemCount(): Int {
@@ -70,6 +71,7 @@ class HoaDonAdapter(private var context: Context, private val hoaDons_list: List
         val tvStatus: TextView = itemView.findViewById(R.id.item_hoa_don_tvStatus)
         val rcImage: RecyclerView = itemView.findViewById(R.id.item_hoa_don_rcImage)
         val tvSoLuong: TextView = itemView.findViewById(R.id.item_hoa_don_tvSoLuong)
+        val tvNgayTao: TextView = itemView.findViewById(R.id.item_hoa_don_tvNgayTao)
         val tvTongTien: TextView = itemView.findViewById(R.id.item_hoa_don_tvTongTien)
     }
 }
